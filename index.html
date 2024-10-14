@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <link href="style.css" rel="stylesheet">
+</head>
+<body>
+    <div class="wrapper">
+        <header>
+            Currency Converter
+        </header>
+        <form action="#">
+            <div class="amount">
+                <p>Enter Amount</p>
+                <input type="text" value="1">
+            </div>
+            <div class="drop-list">
+                <div class="from">
+                    <p>From</p>
+                    <div class="select-box">
+                        <!-- <img src="https://www.countryflags.io/be/flat/64.png"> -->
+                        <select></select>
+                    </div>
+                </div>
+                <div class="icon"><i class="fas fa-exhange-alt"></i></div>
+                <div class="to">
+                    <p>To</p>
+                    <div class="select-box">
+                        <!-- <img src="https://www.countryflags.io/be/flat/64.png"> -->
+                        <select></select>
+                    </div>
+                </div>
+            </div>
+            <div class="exchange-rate">1 USD = 118.16 NPR</div>
+            <button>Get Exchange Rate</button>
+        </form>
+    </div>
+
+    <script src="js/country-list.js"></script>
+    <script src="js/script.js"></script>
+</body>
+</html>

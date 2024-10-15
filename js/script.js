@@ -23,11 +23,73 @@ function getExchangeRate(){
         amountVal = 1;
         amount.value = "1";
     }
-    let url = ` https://v6.exchangerate-api.com/v6/6069a5a93a02cced5d8cf202/latest/${fromCurrency.value}`;
-    fetch(url).then(response => response.json()).then(result => {
-        let exchangeRate = result.conversion_rates[toCurrency.value];
-        let totalExchangeRate = (exchangeRate * amountVal).toFixed(2);
+
+    const currentDate = new Date();
+    const diff = currentDate.getTime() - localStorage.getItem("lastDate");
+    const y = Math.floor(diff / 86400000);
+
+    const lastDate = localStorage.getItem("lastTime");
+    const oldCurrency = JSON.parse(localStorage.getItem("lastCurrency"));
+
+    let url = ` https://v6.exchangerate-api.com/v6/6069a5a93a02cced5d8cf202/latest/AED`;
+
+    if(navigator.onLine){
+
+        if(!oldCurrency || y > 2){
+                fetch(url).then(response => response.json()).then(result => localStorage.setItem("lastCurrency", JSON.stringify(result.conversion_rates)));
+                localStorage.setItem("lastDate", currentDate.getTime());
+                localStorage.setItem("date", currentDate);
+        }
+
+        let currencies = (JSON.parse(localStorage.getItem("lastCurrency")));
+
+        let x = amountVal / currencies[fromCurrency.value];
+
+        let totalExchangeRate = (x * currencies[toCurrency.value]).toFixed(2);
         const exchangeRateTxt = document.querySelector(".exchange-rate");
         exchangeRateTxt.innerText = `${amountVal} ${fromCurrency.value} = ${totalExchangeRate} ${toCurrency.value}`
-    });
+
+    }else{
+        if(!oldCurrency){
+            const u = document.getElementById("latestDate");
+            u.innerText = "You are offline and there is no data for use";
+            u.style.color = "red";
+        }else{
+            let currencies = (JSON.parse(localStorage.getItem("lastCurrency")));
+
+            let x = amountVal / currencies[fromCurrency.value];
+        
+            let totalExchangeRate = (x * currencies[toCurrency.value]).toFixed(2);
+            const exchangeRateTxt = document.querySelector(".exchange-rate");
+            exchangeRateTxt.innerText = `${amountVal} ${fromCurrency.value} = ${totalExchangeRate} ${toCurrency.value}`
+        }
+    }
+
 }
+
+function myFunction() {
+    const lateDate = localStorage.getItem("date");
+    const u = document.getElementById("latestDate");
+
+    if (lateDate) {
+        u.style.color = "black";
+        u.innerText = lateDate;
+    } else {
+        if(navigator.onLine){
+            u.innerText = "Latest date"; 
+            u.style.color = "black";
+        }else{
+            u.innerText = "You are offline and there is no data for use";
+            u.style.color = "red";
+        }
+    }
+}
+
+window.onload = myFunction;
+window.addEventListener('online', (e) => {
+    myFunction();
+});
+
+window.addEventListener('offline', (e) => {
+    myFunction();
+});

@@ -35,7 +35,7 @@ function getExchangeRate(){
 
     if(navigator.onLine){
 
-        if(!oldCurrency || y > 2){
+        if(y > 2 || !oldCurrency){
                 fetch(url).then(response => response.json()).then(result => localStorage.setItem("lastCurrency", JSON.stringify(result.conversion_rates)));
                 localStorage.setItem("lastDate", currentDate.getTime());
                 localStorage.setItem("date", currentDate);

@@ -1,95 +1,90 @@
 const dropList = document.querySelectorAll(".drop-list select");
-getButton = document.querySelector("form button");
 fromCurrency = document.querySelector(".from select");
 toCurrency = document.querySelector(".to select");
+const myInput = document.getElementById("myInput");
+const res = document.querySelector(".exchange-rate");
+const latestDate = document.getElementById("latestDate");
 
-for (let i = 0; i < dropList.length; i++) {
-    for(currency_code in country_list){
-        let optionTag = `<option value="${currency_code}">${currency_code}</option>`;
-        dropList[i].insertAdjacentHTML("beforeend", optionTag);
-    }
-    
+myInput.setAttribute("autocomplete", "off");
+fromCurrency.addEventListener('change', exchange);
+toCurrency.addEventListener('change', exchange);
+myInput.addEventListener('input', exchange);
+
+startApp();
+
+function startApp(){
+    populateDropDowns();
+    exchange();
 }
 
-getButton.addEventListener("click", e => {
-    e.preventDefault();
+function exchange(){
+    checkDataLocalStorage();
     getExchangeRate();
-});
+}
+
+/*
+
+    RON -> EUR , WITH USD
+
+    1 USD ------- 5 RON
+    x USD ------- 10 RON
+
+    1 USD ---- 0.8 EUR
+    X USD ---- Y EUR
+
+
+*/
 
 function getExchangeRate(){
-    const amount = document.querySelector(".amount input");
-    let amountVal = amount.value;
-    if(amountVal == "" || amountVal == "0"){
-        amountVal = 1;
-        amount.value = "1";
-    }
-
-    const currentDate = new Date();
-    const diff = currentDate.getTime() - localStorage.getItem("lastDate");
-    const y = Math.floor(diff / 86400000);
-
-    const lastDate = localStorage.getItem("lastTime");
-    const oldCurrency = JSON.parse(localStorage.getItem("lastCurrency"));
-
-    let url = ` https://v6.exchangerate-api.com/v6/6069a5a93a02cced5d8cf202/latest/AED`;
-
-    if(navigator.onLine){
-
-        if(y > 2 || !oldCurrency){
-                fetch(url).then(response => response.json()).then(result => localStorage.setItem("lastCurrency", JSON.stringify(result.conversion_rates)));
-                localStorage.setItem("lastDate", currentDate.getTime());
-                localStorage.setItem("date", currentDate);
-        }
-
-        let currencies = (JSON.parse(localStorage.getItem("lastCurrency")));
-
-        let x = amountVal / currencies[fromCurrency.value];
-
-        let totalExchangeRate = (x * currencies[toCurrency.value]).toFixed(2);
-        const exchangeRateTxt = document.querySelector(".exchange-rate");
-        exchangeRateTxt.innerText = `${amountVal} ${fromCurrency.value} = ${totalExchangeRate} ${toCurrency.value}`
-
+    if(!navigator.onLine && !JSON.parse(localStorage.getItem("exchangeData"))){
+        res.innerHTML = 'OFFLINE USER & DON-T HAVE DATA';
     }else{
-        if(!oldCurrency){
-            const u = document.getElementById("latestDate");
-            u.innerText = "You are offline and there is no data for use";
-            u.style.color = "red";
-        }else{
-            let currencies = (JSON.parse(localStorage.getItem("lastCurrency")));
-
-            let x = amountVal / currencies[fromCurrency.value];
-        
-            let totalExchangeRate = (x * currencies[toCurrency.value]).toFixed(2);
-            const exchangeRateTxt = document.querySelector(".exchange-rate");
-            exchangeRateTxt.innerText = `${amountVal} ${fromCurrency.value} = ${totalExchangeRate} ${toCurrency.value}`
-        }
-    }
-
-}
-
-function myFunction() {
-    const lateDate = localStorage.getItem("date");
-    const u = document.getElementById("latestDate");
-
-    if (lateDate) {
-        u.style.color = "black";
-        u.innerText = lateDate;
-    } else {
-        if(navigator.onLine){
-            u.innerText = "Latest date"; 
-            u.style.color = "black";
-        }else{
-            u.innerText = "You are offline and there is no data for use";
-            u.style.color = "red";
-        }
+        let dataFromLocalStorage = JSON.parse(localStorage.getItem("exchangeData"));
+        let a = dataFromLocalStorage[fromCurrency.value];
+        let x = myInput.value / a;
+        let b = dataFromLocalStorage[toCurrency.value];
+        let y = (b * x).toFixed(2);
+        displaySum(fromCurrency, toCurrency, myInput.value, y);
     }
 }
 
-window.onload = myFunction;
-window.addEventListener('online', (e) => {
-    myFunction();
-});
+function displaySum(fromCurrency, toCurrency, x, y){
+    if(x != 0 && x != '' && x != ' '){
+        res.innerHTML = `${x} ${fromCurrency.value} = ${y} ${toCurrency.value}`;
+    }else{
+        res.innerHTML = 'Exchange Rates';
+    }
+    const options = {
+        weekday: 'short',
+        day: '2-digit',
+        month: 'short'
+    }
+    latestDate.innerHTML = "Data from : " + new Date(Number(localStorage.getItem("timeData"))).toLocaleDateString('en-GB', options);
+}
 
-window.addEventListener('offline', (e) => {
-    myFunction();
-});
+function checkDataLocalStorage(){
+    if(!JSON.parse(localStorage.getItem("exchangeData"))){
+        saveDataToLocalStorage();
+    }
+    const diff = Math.floor((new Date().getTime() - localStorage.getItem("timeData")) / 86400000); // check if 2 day passed
+    if(diff > 2){
+        saveDataToLocalStorage();
+    }
+}
+
+function saveDataToLocalStorage(){
+    let url = ` https://v6.exchangerate-api.com/v6/6069a5a93a02cced5d8cf202/latest/USD`;
+    fetch(url).then(response => response.json()).then(result => localStorage.setItem("exchangeData", JSON.stringify(result.conversion_rates)));
+    localStorage.setItem("timeData", new Date().getTime());
+}
+
+function populateDropDowns(){
+    for (let i = 0; i < dropList.length; i++) {
+        for(currency_code in country_list){
+            let optionTag = `<option value="${currency_code}">${currency_code}</option>`;
+            dropList[i].insertAdjacentHTML("beforeend", optionTag);
+        }
+    }
+    fromCurrency.value = "USD";
+    toCurrency.value = "RON"
+}
